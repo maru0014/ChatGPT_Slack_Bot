@@ -18,6 +18,7 @@ git clone <リポジトリのURL>
 ```
 
 2. VSCodeでプロジェクトディレクトリを開きます：
+![image](https://github.com/maru0014/ChatGPT_Slack_Bot/assets/15005576/10e6ddce-dada-4b82-b25a-e4ae53cc71a8)
 
 3. .envファイルを作成します：
 
@@ -29,6 +30,7 @@ DEFAULT_MODEL=gpt-4-0125-preview
 ```
 
 4. コンテナーで開きます：
+![image](https://github.com/maru0014/ChatGPT_Slack_Bot/assets/15005576/48dc2fd7-94f1-4b63-8fcf-f9abb90ed883)
 
 
 
