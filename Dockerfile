@@ -1,20 +1,17 @@
-# Use the official Python image
+# 公式のPythonイメージをベースにする
 FROM python:3.12-slim
 
-# Install necessary system packages
+# アップデート
 RUN apt-get update \
 	&& apt-get clean \
 	&& rm -rf /var/lib/apt/lists/*
 
-# Set up working directory
-WORKDIR /app
-
-# Copy requirements.txt and install dependencies
+# requirements.txtをコピーしてpip installを実行
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application code
-COPY . .
+# appフォルダ内の全てのファイルをコンテナ内にコピー
+COPY /app .
 
-# Set the default command to run when starting the container
+# app.pyを実行
 CMD ["python", "app.py"]
