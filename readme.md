@@ -14,7 +14,7 @@
 1. リポジトリをクローンします：
 
 ```sh
-git clone <リポジトリのURL>
+git clone https://github.com/maru0014/ChatGPT_Slack_Bot.git
 ```
 
 2. VSCodeでプロジェクトディレクトリを開きます：
@@ -48,10 +48,10 @@ Dockerを使用してプロジェクトをセットアップする場合は、�
 
 1. Dockerイメージをビルドします：
 ```sh
-docker build -t <イメージ名> .
+docker build -t chatgpt-slack-bot .
 ```
 
 2. Dockerコンテナを実行します：
 ```sh
-docker run --env-file .env <イメージ名>
+docker run --env-file .env chatgpt-slack-bot
 ```
