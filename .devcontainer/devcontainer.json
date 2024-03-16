@@ -3,7 +3,8 @@
 	"dockerFile": "../Dockerfile",
 	"features": {
 		"aws-cli": "latest", // AWS CLIのインストール
-		"git": "latest" // gitのインストール
+		"git": "latest", // gitのインストール
+		"docker-in-docker": "latest" // Docker in Dockerのインストール
 	},
 	"customizations": {
 		"vscode": {
