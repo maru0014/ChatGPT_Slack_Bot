@@ -14,7 +14,7 @@
 1. リポジトリをクローンします：
 
 ```sh
-git clone https://github.com/maru0014/ChatGPT_Slack_Bot.git
+git clone https://github.com/maru0014/chatgpt-slack-bot.git
 ```
 
 2. VSCodeでプロジェクトディレクトリを開きます：
