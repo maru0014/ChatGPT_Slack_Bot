@@ -1,0 +1,50 @@
+{
+	"name": "ChatGPT Slack Bot",
+	"dockerFile": "../Dockerfile",
+	"customizations": {
+		"vscode": {
+			// devcontainer起動時に追加するextentions
+			"extensions": [
+				"ms-python.python", // pythonの拡張機能
+				"ms-python.flake8", // pythonのlinter
+				"ms-python.black-formatter", // pythonのフォーマッター
+				"ms-python.isort", // importを自動で整理してくれる拡張機能
+				"KevinRose.vsc-python-indent", // インデントをスペース4つにするための拡張機能
+				"ms-vscode-remote.remote-containers" // Remote Containersの拡張機能
+			],
+			// VSCodeの設定
+			"settings": {
+				"[python]": {
+					// pythonのフォーマッターをblackに設定
+					"editor.defaultFormatter": "ms-python.black-formatter",
+					// pythonのファイルを保存時に自動でフォーマット
+					"editor.formatOnSave": true,
+					// pythonのファイルを保存時に自動でimportを整理
+					"editor.codeActionsOnSave": {
+						"source.organizeImports": true
+					}
+				},
+				// linterの設定
+				"flake8.args": [
+					"--max-line-length=120", // 1行の文字数の上限
+					"--max-complexity=10" // 複雑度の上限
+				],
+				// isortの設定
+				"isort.args": [
+					"--profile",
+					"black"
+				],
+				// タイトルバーの色を変更（DevContainerであることをわかりやすくするため）
+				"workbench.colorCustomizations": {
+					"titleBar.activeBackground": "#19549C",
+					"titleBar.activeForeground": "#ffffff"
+				}
+			}
+		}
+	},
+	// 実行時に.envを読み込む設定
+	"runArgs": [
+		"--env-file",
+		".env"
+	]
+}
