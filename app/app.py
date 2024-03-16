@@ -1,31 +1,27 @@
 import os
 
 import openai
+import tiktoken
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from slack_sdk.web import WebClient
 
-# ボットトークンとソケットモードハンドラーを使ってアプリを初期化します
 app = App(token=os.environ.get("SLACK_BOT_TOKEN"))
 
 
-# リスナーマッチャー： 簡略化されたバージョンのリスナーミドルウェア
 def is_bot_dm(message) -> bool:
+    """
+    dmのメッセージかどうかを判定します
+    """
     return message["channel_type"] == "im"
 
 
-# 'hello' を含むメッセージをリッスンします
-# 指定可能なリスナーのメソッド引数の一覧は以下のモジュールドキュメントを参考にしてください：
-# https://slack.dev/bolt-python/api-docs/slack_bolt/kwargs_injection/args.html
-@app.message("hello")
-def message_hello(message, say):
-    # イベントがトリガーされたチャンネルへ say() でメッセージを送信します
-    say(f"Hey there <@{message['user']}>!")
-
-
-@app.event(event="message", matchers=[is_bot_dm])
 @app.event("app_mention")
+@app.event(event="message", matchers=[is_bot_dm])
 def handle_mention(event: dict, client: WebClient):
+    """
+    botへのメンションやDMに対して応答します
+    """
     messages = []
     user = event["user"]
     channel = event["channel"]
@@ -33,7 +29,7 @@ def handle_mention(event: dict, client: WebClient):
 
     # 受付メッセージを送信
     text = "少々お待ちください..."
-    received_msg = client.chat_postMessage(channel=channel, text=text, thread_ts=ts)
+    wip_message = client.chat_postMessage(channel=channel, text=text, thread_ts=ts)
 
     # thread_tsがある場合はスレッドのメッセージを取得
     if "thread_ts" in event:
@@ -41,27 +37,38 @@ def handle_mention(event: dict, client: WebClient):
     else:
         messages = [{"role": "user", "content": event["text"]}]
 
-    # ChatGPTの応答を取得して送信
     try:
-        response = respond_gpt(messages)
+        # モデルとトークン数の上限を取得
+        model = os.environ.get("DEFAULT_MODEL", "gpt-3.5-turbo")
+        limit = int(os.environ.get("TOKEN_LIMIT", 4000))
+        tokens = calculate_tokens(messages, model)
+
+        if tokens > limit:
+            # トークン数が上限を超えている場合はエラーメッセージを送信
+            message = (
+                f"<@{user}> 申し訳ありません。トークン数が上限を超えています。"
+                "新しいスレッドを開始するか、メッセージの文字数を減らして再度お試しください。"
+            )
+            client.chat_update(channel=channel, ts=wip_message["ts"], text=message)
+            return
+
+        response = respond_gpt(messages, model)
         message = f"<@{user}> {response}"
-        client.chat_update(channel=channel, ts=received_msg["ts"], text=message)
+        client.chat_update(channel=channel, ts=wip_message["ts"], text=message)
+    except openai.APITimeoutError as e:
+        print(f"[ERROR] {e}")
+        message = (
+            f"<@{user}> 申し訳ありません。タイムアウトが発生しました。\n"
+            "再度お試しください。改善されない場合は管理者までご連絡ください。"
+        )
+        client.chat_update(channel=channel, ts=wip_message["ts"], text=message)
     except Exception as e:
-        message = f"<@{user}> 申し訳ありません。エラーが発生しました。\n{e}"
-        client.chat_update(channel=channel, ts=received_msg["ts"], text=message)
-
-
-def respond_gpt(messages) -> str:
-    """
-    OpenAIのChatGPTを使って応答を取得します
-    """
-    model = os.environ["DEFAULT_MODEL"]
-    completion = openai.chat.completions.create(
-        model=model,
-        messages=messages,
-    )
-    response_message = completion.choices[0].message.content
-    return response_message
+        print(f"[ERROR] {e}")
+        message = (
+            f"<@{user}> 申し訳ありません。エラーが発生しました。\n"
+            f"次のエラー内容を管理者にお伝え下さい。\n{e}"
+        )
+        client.chat_update(channel=channel, ts=wip_message["ts"], text=message)
 
 
 def get_thread_messages(channel: str, ts: str, client: WebClient) -> list:
@@ -86,6 +93,31 @@ def get_thread_messages(channel: str, ts: str, client: WebClient) -> list:
     if messages[-1]["role"] == "assistant":
         messages.pop(-1)
     return messages
+
+
+def calculate_tokens(messages: list, model: str) -> int:
+    """
+    tiktokenを使ってトークン数を計算します
+    """
+    enc = tiktoken.encoding_for_model(model)
+    tokens = 0
+    for message in messages:
+        tokens += len(enc.encode(message["content"]))
+    return tokens
+
+
+def respond_gpt(messages: list, model: str) -> str:
+    """
+    OpenAIのChatGPTを使って応答を取得します
+    """
+    timeout = int(os.environ.get("TIMEOUT_SECONDS", 30))
+    completion = openai.chat.completions.create(
+        model=model,
+        messages=messages,
+        timeout=timeout,
+    )
+    response_message = completion.choices[0].message.content
+    return response_message
 
 
 # アプリを起動します
