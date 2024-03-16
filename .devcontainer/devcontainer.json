@@ -1,6 +1,10 @@
 {
 	"name": "ChatGPT Slack Bot",
 	"dockerFile": "../Dockerfile",
+	"features": {
+		"aws-cli": "latest", // AWS CLIのインストール
+		"git": "latest" // gitのインストール
+	},
 	"customizations": {
 		"vscode": {
 			// devcontainer起動時に追加するextentions

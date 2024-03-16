@@ -2,11 +2,8 @@
 FROM python:3.12-slim
 
 # Install necessary system packages
-RUN apt-get update && \
-	apt-get install -y \
-	curl \
-	gcc \
-	make \
+RUN apt-get update \
+	&& apt-get clean \
 	&& rm -rf /var/lib/apt/lists/*
 
 # Set up working directory
