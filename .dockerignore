@@ -1,0 +1,12 @@
+# Python bytecode
+__pycache__
+
+# IDEの設定ファイル
+.vscode/
+.idea/
+
+# macOSのファイル
+.DS_Store
+
+# Virtual Environment
+.env*

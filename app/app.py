@@ -1,7 +1,7 @@
 import os
 
-import openai
-import tiktoken
+from openai import APITimeoutError
+from openai_ops import calculate_tokens, respond_gpt
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from slack_sdk.web import WebClient
@@ -55,7 +55,7 @@ def handle_mention(event: dict, client: WebClient):
         response = respond_gpt(messages, model)
         message = f"<@{user}> {response}"
         client.chat_update(channel=channel, ts=wip_message["ts"], text=message)
-    except openai.APITimeoutError as e:
+    except APITimeoutError as e:
         print(f"[ERROR] {e}")
         message = (
             f"<@{user}> 申し訳ありません。タイムアウトが発生しました。\n"
@@ -93,31 +93,6 @@ def get_thread_messages(channel: str, ts: str, client: WebClient) -> list:
     if messages[-1]["role"] == "assistant":
         messages.pop(-1)
     return messages
-
-
-def calculate_tokens(messages: list, model: str) -> int:
-    """
-    tiktokenを使ってトークン数を計算します
-    """
-    enc = tiktoken.encoding_for_model(model)
-    tokens = 0
-    for message in messages:
-        tokens += len(enc.encode(message["content"]))
-    return tokens
-
-
-def respond_gpt(messages: list, model: str) -> str:
-    """
-    OpenAIのChatGPTを使って応答を取得します
-    """
-    timeout = int(os.environ.get("TIMEOUT_SECONDS", 30))
-    completion = openai.chat.completions.create(
-        model=model,
-        messages=messages,
-        timeout=timeout,
-    )
-    response_message = completion.choices[0].message.content
-    return response_message
 
 
 # アプリを起動します
