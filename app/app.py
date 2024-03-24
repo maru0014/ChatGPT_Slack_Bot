@@ -9,6 +9,13 @@ from slack_sdk.web import WebClient
 app = App(token=os.environ.get("SLACK_BOT_TOKEN"))
 
 
+def no_bot_messages(message) -> bool:
+    """
+    人間によって送信されたメッセージかどうかを判定します
+    """
+    return message.get("subtype") != "bot_message"
+
+
 def is_bot_dm(message) -> bool:
     """
     dmのメッセージかどうかを判定します
@@ -16,8 +23,8 @@ def is_bot_dm(message) -> bool:
     return message["channel_type"] == "im"
 
 
-@app.event("app_mention")
-@app.event(event="message", matchers=[is_bot_dm])
+@app.event(event="app_mention", matchers=[no_bot_messages])
+@app.event(event="message", matchers=[no_bot_messages, is_bot_dm])
 def handle_mention(event: dict, client: WebClient):
     """
     botへのメンションやDMに対して応答します
