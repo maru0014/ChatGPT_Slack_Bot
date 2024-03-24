@@ -9,11 +9,15 @@ from slack_sdk.web import WebClient
 app = App(token=os.environ.get("SLACK_BOT_TOKEN"))
 
 
-def no_bot_messages(message) -> bool:
+def no_bot_messages(event, message) -> bool:
     """
     人間によって送信されたメッセージかどうかを判定します
     """
-    return message.get("subtype") != "bot_message"
+    if message is not None:
+        return message.get("subtype") != "bot_message"
+    if event is not None:
+        return event.get("subtype") != "bot_message"
+    return False
 
 
 def is_bot_dm(message) -> bool:
